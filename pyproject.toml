@@ -1,0 +1,41 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "climategan_project"
+version = "0.0.1"
+description = "Implentation of ClimateGAN for environment awareness"
+authors = [
+  { name = "Roi Flores, Ivan Morales, Rafael Takata" },
+]
+
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    
+]
+dependencies = [
+    "loguru",
+    "mkdocs",
+    "pip",
+    "python-dotenv",
+    "ruff",
+    "tqdm",
+    "typer",
+]
+requires-python = "~=3.8.0"
+
+
+[tool.ruff]
+line-length = 99
+src = ["climategan_project"]
+include = ["pyproject.toml", "climategan_project/**/*.py"]
+
+[tool.ruff.lint]
+extend-select = ["I"]  # Add import sorting
+
+[tool.ruff.lint.isort]
+known-first-party = ["climategan_project"]
+force-sort-within-sections = true
+
