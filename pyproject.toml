@@ -16,6 +16,7 @@ classifiers = [
     
 ]
 dependencies = [
+    "gdown>=5.2.1",
     "loguru",
     "mkdocs",
     "pip",
