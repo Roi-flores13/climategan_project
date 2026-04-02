@@ -1,0 +1,276 @@
+comet:
+  display_size: 25
+  im_per_row:
+    d: 3
+    m: 4
+    p: 4
+    s: 3
+  rows_per_log: 5
+  tags: []
+
+data:
+  check_samples: false
+  files:
+    base: /network/tmp1/ccai/data/omnigan/twitter/
+    train:
+      r: /network/tmp1/ccai/data/omnigan/twitter/train_r.json
+      rf: /network/tmp1/ccai/data/omnigan/twitter/train_rf.json
+      s: /network/tmp1/ccai/data/omnigan/twitter/train_s.json
+    val:
+      r: /network/tmp1/ccai/data/omnigan/twitter/val_r.json
+      rf: /network/tmp1/ccai/data/omnigan/twitter/val_rf_labelbox.json
+      s: /network/tmp1/ccai/data/omnigan/twitter/val_s.json
+  loaders:
+    batch_size: 6
+    num_workers: 6
+    shuffle: false
+  max_samples: -1
+  normalization: default
+  transforms:
+  - ignore: false
+    name: hflip
+    p: 0.5
+  - ignore: false
+    keep_aspect_ratio: true
+    name: resize
+    new_size: 640
+  - height: 600
+    ignore: false
+    name: crop
+    width: 600
+  - ignore: false
+    name: resize
+    new_size: 640
+dis:
+  default:
+    get_intermediate_features: false
+    init_gain: 0.2
+    init_type: kaiming
+    input_nc: 3
+    n_layers: 4
+    ndf: 64
+    norm: instance
+    num_D: 1
+    use_sigmoid: false
+  flip_prob: 0.05
+  m:
+    architecture: base
+    gan_type: WGAN_norm
+    get_intermediate_features: false
+    init_gain: 0.2
+    init_type: kaiming
+    input_nc: 3
+    multi_level: false
+    n_layers: 4
+    ndf: 64
+    norm: instance
+    num_D: 1
+    use_sigmoid: false
+    wgan_clamp_lower: -0.01
+    wgan_clamp_upper: 0.01
+  opt:
+    beta1: 0.5
+    lr:
+      default: 0.001
+    lr_gamma: 0.5
+    lr_milestones: 15
+    lr_policy: step
+    lr_step_size: 30
+    optimizer: ExtraAdam
+  p:
+    get_intermediate_features: true
+    init_gain: 0.2
+    init_type: kaiming
+    input_nc: 3
+    n_layers: 4
+    ndf: 64
+    norm: batch
+    num_D: 3
+    use_local_discriminator: false
+    use_sigmoid: false
+  s:
+    gan_type: WGAN_norm
+    get_intermediate_features: false
+    init_gain: 0.2
+    init_type: kaiming
+    input_nc: 3
+    n_layers: 4
+    ndf: 64
+    norm: instance
+    num_D: 1
+    use_sigmoid: false
+    wgan_clamp_lower: -0.01
+    wgan_clamp_upper: 0.01
+  soft_shift: 0.2
+domains:
+- rf
+gen:
+  d:
+    activ: lrelu
+    conv_norm: batch
+    init_gain: 0.01
+    init_type: normal
+    n_downsample: 3
+    n_res: 1
+    n_upsample: 3
+    output_dim: 1
+    pad_type: reflect
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: batch
+  deeplabv2:
+    nblocks:
+    - 3
+    - 4
+    - 23
+    - 3
+    pretrained_model: /network/tmp1/ccai/data/omnigan/pretrained_models/DeepLab_resnet_pretrained_imagenet.pth
+    use_pretrained: true
+  default:
+    activ: lrelu
+    conv_norm: spectral
+    init_gain: 0.2
+    init_type: xavier
+    n_downsample: 3
+    n_res: 1
+    n_upsample: 3
+    pad_type: reflect
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: spectral
+  encoder:
+    activ: lrelu
+    architecture: deeplabv2
+    conv_norm: spectral
+    dim: 32
+    init_gain: 0.2
+    init_type: xavier
+    input_dim: 3
+    n_downsample: 3
+    n_res: 0
+    n_upsample: 3
+    norm: spectral
+    pad_type: reflect
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: spectral
+  m:
+    activ: lrelu
+    conv_norm: spectral
+    init_gain: 0.2
+    init_type: xavier
+    loss: gan
+    n_downsample: 3
+    n_res: 1
+    n_upsample: 3
+    output_dim: 1
+    pad_type: reflect
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: spectral
+    use_advent: true
+    use_ground_intersection: true
+    use_minent: true
+    use_minent_var: true
+  opt:
+    beta1: 0.5
+    lr:
+      default: 0.0005
+    lr_gamma: 0.5
+    lr_milestones: 15
+    lr_policy: step
+    lr_step_size: 30
+    optimizer: ExtraAdam
+  p:
+    activ: relu
+    conv_norm: spectral
+    init_gain: 0.2
+    init_type: kaiming
+    latent_dim: 640
+    loss: gan
+    n_downsample: 3
+    n_interm_res: 11
+    n_res: 1
+    n_upsample: 3
+    no_z: true
+    output_dim: 3
+    pad_type: reflect
+    paste_original_content: true
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: spectral
+    spade_kernel_size: 3
+    spade_n_up: 7
+    spade_param_free_norm: instance
+    spade_use_spectral_norm: true
+    use_final_shortcut: false
+  s:
+    activ: lrelu
+    conv_norm: spectral
+    init_gain: 0.2
+    init_type: xavier
+    n_downsample: 3
+    n_res: 1
+    n_upsample: 3
+    num_classes: 11
+    output_dim: 11
+    pad_type: reflect
+    proj_dim: 32
+    res_dim: 2048
+    res_norm: spectral
+    upsample_featuremaps: false
+    use_advent: true
+    use_minent: true
+    use_pseudo_labels: false
+load_paths:
+  m: none
+  p: none
+output_path: /miniscratch/schmidtv/vicc/omnigan/runs/painter/default (2)
+tasks:
+- p
+train:
+  auto_resume: true
+  epochs: 10000
+  fid:
+    batch_size: 50
+    dims: 2048
+    n_images: 57
+  lambdas:
+    C: 1
+    G:
+      classifier: 1
+      d:
+        gml: 0.5
+        main: 1
+      m:
+        bce: 1
+        gi: 0.05
+        tv: 1
+      p:
+        context: 0
+        dm: 1
+        featmatch: 10
+        gan: 1
+        reconstruction: 0
+        tv: 0
+        vgg: 10
+      s:
+        advent: 0.001
+        crossent: 1
+        crossent_pseudo: 0.001
+        minent: 0.001
+    advent:
+      WGAN_gp: 10
+      adv_aux: 0.0
+      adv_main: 1.0
+      dis_aux: 0.0
+      dis_main: 1.0
+      ent_aux: 0.0
+      ent_main: 0.5
+      ent_var: 0.1
+  latent_domain_adaptation: false
+  log_level: 2
+  resume: false
+  save_n_epochs: 1
+val:
+  store_images: false
