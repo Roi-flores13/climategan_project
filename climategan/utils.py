@@ -18,7 +18,7 @@ import numpy as np
 import torch
 import yaml
 from addict import Dict
-from comet_ml import Experiment
+#from comet_ml import Experiment
 
 comet_kwargs = {
     "auto_metric_logging": False,
@@ -1050,8 +1050,8 @@ def upload_images_to_exp(
         end = "\r"
     if verbose > 1:
         end = "\n"
-    if exp is None:
-        exp = Experiment(project_name=project_name)
+    #if exp is None:
+        #exp = Experiment(project_name=project_name)
     for im in ims:
         exp.log_image(str(im))
         if verbose > 0:

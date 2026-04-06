@@ -11,7 +11,9 @@ from pathlib import Path
 from time import time
 
 import numpy as np
-from comet_ml import ExistingExperiment, Experiment
+from typer import params
+# Comentamos para evitar errores pues no estamos trabajando con comet.ml
+#from comet_ml import ExistingExperiment, Experiment
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -109,9 +111,10 @@ class Trainer:
         self.device = device or torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu"
         )
-
-        if isinstance(comet_exp, Experiment):
-            self.exp = comet_exp
+        
+        # Comentamos para evitar errores pues no estamos trabajando con comet.ml
+        #if isinstance(comet_exp, Experiment):
+        #    self.exp = comet_exp
 
         if self.opts.train.amp:
             optimizers = [
@@ -376,7 +379,7 @@ class Trainer:
         if new_exp is None:
             exp = None
         elif new_exp is True:
-            exp = Experiment(project_name="climategan", **comet_kwargs)
+            #exp = Experiment(project_name="climategan", **comet_kwargs)
             exp.log_asset_folder(
                 str(resolve(Path(__file__)).parent),
                 recursive=True,
@@ -385,7 +388,9 @@ class Trainer:
             exp.log_parameters(flatten_opts(opts))
         else:
             comet_id = get_existing_comet_id(p)
-            exp = ExistingExperiment(previous_experiment=comet_id, **comet_kwargs)
+            # Comentamos para evitar errores pues no estamos trabajando con comet.ml
+            # Sino de manera local
+            #exp = ExistingExperiment(previous_experiment=comet_id, **comet_kwargs)
 
         trainer = cls(opts, comet_exp=exp, device=device, verbose=verbose)
 
@@ -1897,12 +1902,56 @@ class Trainer:
 
         params = self.opts.events.smog
 
-        airlight = params.airlight * torch.ones(3)
-        airlight = airlight.view(1, -1, 1, 1).to(self.device)
+        # Ajustamos la extraccion de Airlight, Beta y de VR para evitar errores con diferentes
+        # formatos con los diccionarios
+
+
+        #airlight = params.airlight * torch.ones(3)
+        #airlight = airlight.view(1, -1, 1, 1).to(self.device)
+
+        # 1. Intentar forzar la extracción del valor
+        try:
+            if hasattr(params.airlight, 'default'):
+                airlight_val = float(params.airlight.default)
+            elif 'default' in params.airlight:
+                airlight_val = float(params.airlight['default'])
+            else:
+                airlight_val = 1.0 # Fallback seguro
+        except Exception:
+            airlight_val = 1.0 # Fallback si es un diccionario anidado
+
+        # 2. Calculamos el tensor final y lo enviamos a la GPU
+        airlight = (airlight_val * torch.ones(3)).view(1, -1, 1, 1).to(self.device)
 
         irradiance = srgb2lrgb(x)
 
-        beta = torch.tensor([params.beta / params.vr] * 3)
+        #beta = torch.tensor([params.beta / params.vr] * 3)
+        #beta = beta.view(1, -1, 1, 1).to(self.device)
+
+        # 1. Extraemos el valor de beta (coeficiente de dispersión atmosférica)
+        try:
+            if hasattr(params.beta, 'default'):
+                beta_val = float(params.beta.default)
+            elif 'default' in params.beta:
+                beta_val = float(params.beta['default'])
+            else:
+                beta_val = 1.0
+        except Exception:
+            beta_val = 1.0
+
+        # 2. Extraemos el valor de vr o rango visual
+        try:
+            if hasattr(params.vr, 'default'):
+                vr_val = float(params.vr.default)
+            elif 'default' in params.vr:
+                vr_val = float(params.vr['default'])
+            else:
+                vr_val = 10.0 
+        except Exception:
+            vr_val = 10.0
+
+        # 3. Calculamos el tensor final y lo enviamos a la GPU
+        beta = torch.tensor([beta_val / vr_val] * 3)
         beta = beta.view(1, -1, 1, 1).to(self.device)
 
         d = normalize(d, mini=0.3, maxi=1.0)
@@ -1925,8 +1974,42 @@ class Trainer:
         smogged = lrgb2srgb(smogged)
 
         # add yellow filter
-        alpha = params.alpha / 255
-        yellow_mask = torch.Tensor([params.yellow_color]) / 255
+        #alpha = params.alpha / 255
+
+        # Extraer el valor de alpha (opacidad/intensidad de la capa de smog)
+        try:
+            if hasattr(params.alpha, 'default'):
+                alpha_val = float(params.alpha.default)
+            elif 'default' in params.alpha:
+                alpha_val = float(params.alpha['default'])
+            else:
+                alpha_val = 128.0 # Fallback: opacidad media
+        except Exception:
+            alpha_val = 128.0
+
+        # Normalizar el valor
+        alpha = alpha_val / 255.0
+
+        #yellow_mask = torch.Tensor([params.yellow_color]) / 255
+
+        # 1. Extraer los valores RGB para el tono del smog
+        try:
+            if hasattr(params.yellow_color, 'default'):
+                color_val = list(params.yellow_color.default)
+            elif 'default' in params.yellow_color:
+                color_val = list(params.yellow_color['default'])
+            else:
+                color_val = [225.0, 215.0, 185.0] # Tono amarillento por defecto del smog
+        except Exception:
+            color_val = [225.0, 215.0, 185.0]
+
+        # 2. Convertimos a una lista valida de 3 elementos
+        if not isinstance(color_val, list) or len(color_val) != 3:
+            color_val = [225.0, 215.0, 185.0]
+
+        # 3. Creamos el tensor normalizado 
+        yellow_mask = torch.Tensor([color_val]) / 255.0
+
         yellow_filter = (
             yellow_mask.unsqueeze(2)
             .unsqueeze(2)
