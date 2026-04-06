@@ -134,11 +134,11 @@ def parse_args():
         help="When using --keep_ratio_128, some images may still be too large. Use "
         + "--max_im_width to cap the resized image's width. Defaults to -1 (no cap).",
     )
-    parser.add_argument(
-        "--upload",
-        action="store_true",
-        help="Upload to comet.ml in a project called `climategan-apply`",
-    )
+    #parser.add_argument(
+    #    "--upload",
+    #    action="store_true",
+    #    help="Upload to comet.ml in a project called `climategan-apply`",
+    #)
     parser.add_argument(
         "--zip_outdir",
         "-z",
@@ -160,7 +160,7 @@ import shutil
 from collections import OrderedDict
 from pathlib import Path
 
-import comet_ml  # noqa: F401
+#import comet_ml  # noqa: F401
 import torch
 import numpy as np
 import skimage.io as io
@@ -398,7 +398,7 @@ if __name__ == "__main__":
     resume_path = args.resume_path
     target_size = args.target_size
     time_inference = not args.no_time
-    upload = args.upload
+    upload = False
     zip_outdir = args.zip_outdir
 
     # -------------------------------------
@@ -546,10 +546,10 @@ if __name__ == "__main__":
     # --------------------------------------------
     if outdir is not None or upload:
 
-        if upload:
-            print("\n• Creating comet Experiment")
-            exp = comet_ml.Experiment(project_name="climategan-apply")
-            exp.log_parameters(vars(args))
+        #if upload:
+        #    print("\n• Creating comet Experiment")
+        #    exp = comet_ml.Experiment(project_name="climategan-apply")
+        #    exp.log_parameters(vars(args))
 
         # --------------------------------------------------------------
         # -----  Change inferred data structure to a list of dicts  -----
@@ -619,8 +619,8 @@ if __name__ == "__main__":
                         im_path = outdir / im_path
                         io.imsave(im_path, im_data)
 
-                    if upload:
-                        exp.log_image(im_data, name=im_path.name)
+                    #if upload:
+                    #    exp.log_image(im_data, name=im_path.name)
     if zip_outdir:
         print("\n• Zipping output directory... ", end="", flush=True)
         archive_path = Path(shutil.make_archive(outdir.name, "zip", root_dir=outdir))
