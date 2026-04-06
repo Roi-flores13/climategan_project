@@ -1,0 +1,2 @@
+cd C:\Users\ivanm\6toSemestre\deep_learning\climategan_project
+apply_events.py -b 4 --half -i images_ready_640 -r config/model/masker --output_path ./resultados_climate
